@@ -18,15 +18,17 @@ import pickle
 
 ########### open the pickle file ######
 
+#this is for preprocessing
 filename = open('model_outputs/scaler.pkl', 'rb')
 scaler = pickle.load(filename)
 filename.close()
 
-filename = open('model_outputs/rf_model.pkl', 'rb')
-rf_model = pickle.load(filename)
+filename = open('model_outputs/tree_grid_model.pkl', 'rb')
+treegrid_model = pickle.load(filename)
 filename.close()
 
 filename = open('model_outputs/xgb_model.pkl', 'rb')
+#treegrid_model = pickle.load(filename)
 xgb_model = pickle.load(filename)
 filename.close()
 
@@ -35,7 +37,7 @@ filename.close()
 ########### define variables
 tabtitle='digits classifier'
 sourceurl = 'https://scikit-learn.org/stable/auto_examples/classification/plot_digits_classification.html'
-githublink = 'https://github.com/plotly-dash-apps/506-digit-classifier-xgboost'
+githublink = 'https://github.com/MMartGA99/506-digit-classifier-xgboost'
 canvas_size = 200
 
 ########### BLANK FIGURE
@@ -149,13 +151,13 @@ app.layout = html.Div(children=[
             html.Div([
                 html.H3('Predicted Digit'),
                 html.Br(),
-                html.H4('Random Forest Model:'),
-                html.H6(id='rf-prediction', children='...'),
-                html.H6(id='rf-probability', children='waiting for inputs'),
-                html.Br(),
-                html.H4('XGBoost Model:'),
+                html.H4('XG Boost Model:'),
                 html.H6(id='xgb-prediction', children='...'),
                 html.H6(id='xgb-probability', children='waiting for inputs'),
+                html.Br(),
+                html.H4('Tree_Grid_Model:'),
+                html.H6(id='treegrid-prediction', children='...'),
+                html.H6(id='treegrid-probability', children='waiting for inputs'),
             ], className='three columns'),
         ], className="twelve columns"),
         html.Br(),
@@ -168,10 +170,10 @@ app.layout = html.Div(children=[
 ######### CALLBACK
 @app.callback(
                 Output('output-figure', 'figure'),
-                Output('rf-prediction', 'children'),
-                Output('rf-probability', 'children'),
                 Output('xgb-prediction', 'children'),
                 Output('xgb-probability', 'children'),
+                Output('treegrid-prediction', 'children'),
+                Output('treegrid-probability', 'children'),
               Input('canvas', 'json_data'))
 def update_data(string):
     if string:
@@ -202,23 +204,23 @@ def update_data(string):
         # standardize
         some_digit_scaled = scaler.transform([some_digit_array])
 
-        # make a prediction: Random Forest
-        rf_pred = rf_model.predict(some_digit_scaled)
-        rf_prob_array = rf_model.predict_proba(some_digit_scaled)
-        rf_prob = max(rf_prob_array[0])
-        rf_prob=round(rf_prob*100,2)
-
-        # make a prediction: XG Boost
+        # make a prediction: Random Forest - changed to XG Boost
         xgb_pred = xgb_model.predict(some_digit_scaled)
         xgb_prob_array = xgb_model.predict_proba(some_digit_scaled)
         xgb_prob = max(xgb_prob_array[0])
         xgb_prob=round(xgb_prob*100,2)
 
+        # make a prediction: XG Boost - changed to tree grid model
+        treegrid_pred = treegrid_model.predict(some_digit_scaled)
+        treegrid_prob_array = treegrid_model.predict_proba(some_digit_scaled)
+        treegrid_prob = max(treegrid_prob_array[0])
+        treegrid_prob=round(treegrid_prob*100,2)
+
     else:
         raise PreventUpdate
 
 
-    return   fig,  f'Digit: {rf_pred[0]}', f'Probability: {rf_prob}%', f'Digit: {xgb_pred[0]}', f'Probability: {xgb_prob}%'
+    return   fig,  f'Digit: {xgb_pred[0]}', f'Probability: {xgb_prob}%', f'Digit: {treegrid_pred[0]}', f'Probability: {treegrid_prob}%'
 
 
 if __name__ == '__main__':
